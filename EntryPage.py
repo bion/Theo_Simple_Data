@@ -3,8 +3,8 @@ import datetime
 import sqlite3
 
 class Page:
-    title = 'Untitled Page'
-    action = 'dunno_yet'
+    title = 'tbd page'
+    action = 'tbd action'
     
     def datetoday(self):
       return str(datetime.datetime.now()).split()[0]
@@ -20,6 +20,11 @@ class Page:
         ''' % (self.title, self.title)
         
     def primaryForm(self, action):
+      conn = sqlite3.connect('test.db')
+      cursor = conn.cursor()
+      cursor.execute('SELECT max(batch) FROM Production')
+      currentBatch = cursor.fetchone()
+      conn.close()
       return '''
         <form action="%s" method="GET">
           Employee name: 
@@ -35,32 +40,25 @@ class Page:
           <input type="text" name="origin" required />
           <br>
           Total pounds in:
-          <input type="number" name="lbsIn" value="0" />
+          <input type="number" name="lbsIn" min="0" value="0" />
           <br>
           Total pounds out:
-          <input type="number" name="lbsOut" value="0" />
+          <input type="number" name="lbsOut" min="0" value="0" />
           <br>
           Batch number:
-          <input type="number" name="batch" />
+          <input type="number" name="batch" value="%s" required />
           <br> 
           <input type="submit" />
           </form>
-        ''' % ( action, self.datetoday() )
+        ''' % ( action, self.datetoday(), currentBatch[0] )
     
     def databaseSubmission(self, tuple):
-        # connect to database        
         conn = sqlite3.connect('test.db')
         cursor = conn.cursor()
-                
-        # add info to database
-        # columns: date, origin, operator, labor, lbs in, lbs out, batch
         cursor.execute('''
             INSERT INTO Production VALUES
             (?, ?, ?, ?, ?, ?, ?, ?)
                 ''', tuple)
-
-        # commit info to DB
-        # close DB connection
         conn.commit()
         conn.close()
         
@@ -201,29 +199,39 @@ class Report(Page):
     def displayBatchReport(self, batch = None):
       conn = sqlite3.connect('test.db')
       cursor = conn.cursor()
-      
       cursor.execute('''
         SELECT * FROM Production WHERE batch=?
         ''', [batch])
-      
       displayString = ''
       
       items = cursor.fetchall()
       for item in items:
-        line = '<p>%s: %s IN/OUT: %s / %s LABOR: %s %s    %s</p><br>' \
+        line = '<p>%s: %s IN/OUT: %s / %s LABOR: %s %s    %s</p>' \
           % (item[0], item[2], item[5], item[6], item[4], item[3], item[1])
         displayString = displayString + line
       conn.close()
-      
       return self.header() + '''
         <p>Here lies batch number %s:</p>
         ''' % batch + displayString + self.footer()
     displayBatchReport.exposed = True
     
     def displayDateReport(self, date = None):
+      conn = sqlite3.connect('test.db')
+      cursor = conn.cursor()
+      cursor.execute('''
+        SELECT * FROM Production WHERE date=?
+        ''', [date])
+      displayString = ''
+      
+      items = cursor.fetchall()
+      for item in items:
+        line = '<p>%s: %s IN/OUT: %s / %s LABOR: %s %s    %s</p>' \
+          % (item[0], item[2], item[5], item[6], item[4], item[3], item[1])
+        displayString = displayString + line
+      conn.close()
       return self.header() + '''
-        <p>here the date %s</p>
-        ''' % date + self.footer()
+        <p>Here's everything done on %s:</p>
+        ''' % date + displayString + self.footer()
     displayDateReport.exposed = True
     
     
