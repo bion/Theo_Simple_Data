@@ -2,15 +2,11 @@ import cherrypy
 import datetime
 import sqlite3
 
-conn = sqlite3.connect('test.db')
-c = conn.cursor()
-
-c.execute('SELECT names FROM Employee')
-
-employees = c.fetchall
-
 class Page:
     title = 'Untitled Page'
+        
+    def datetoday(self):
+      return str(datetime.datetime.now()).split()[0]
     
     def header(self):
         return '''
@@ -29,14 +25,13 @@ class Page:
         '''
 
 class StartPage(Page):
-    title = 'Theo Production Tracking'
+    title = 'Theo Production Work Submission'
     
     def __init__(self):
         self.destone = Destone()
         self.roast = Roast()
         self.winnow = Winnow()
         self.mill = Mill()
-        self.refine = Refine()
     
     def index(self):
         return self.header() + '''
@@ -46,7 +41,6 @@ class StartPage(Page):
                 <li><a href="./roast/">Roast</a></li>
                 <li><a href="./winnow/">Winnow</a></li>
                 <li><a href="./mill/">Mill</a></li>
-                <li><a href="./refine/">Refine</a></li>
             </ul>
         ''' + self.footer()
     index.exposed = True
@@ -77,24 +71,38 @@ class Destone(Page):
                 <input type="number" name="lbsOut" min="100" required />
                 <br>
                 <input type="submit" />
-        ''' % str(datetime.datetime.now()).split()[0] + self.footer()
+        ''' % self.datetoday() + self.footer()
     index.exposed = True
     
     def submitDestone(self, employee = None, date = None, labor = None, origin = None,
                      lbsIn = None, lbsOut = None):
-#         c.execute('''
-#             INSERT INTO Destone(
-#                 ''')
+        
+        # connect to database        
+        conn = sqlite3.connect('test.db')
+        cursor = conn.cursor()
+
+        # add info to database
+        # Destone columns: date, origin, operator, labor, lbs in, lbs out
+        self.cursor.execute('''
+            INSERT INTO Destone VALUES
+            (?, ?, ?, ?, ?, ?)
+                ''', (date, origin, employee, labor, lbsIn, lbsOut) )
+
+        # commit info to DB
+        # close DB connection
+        conn.commit()
+        conn.close()
+        
+        # display info for user
         return self.header() + '''
-            <p> The following was submitted </p>
+            <p> The following was submitted: </p>
             <p> Employee: %s </p>
             <p> Date: %s </p>
             <p> Labor (in minutes): %s </p>
             <p> Origin: %s </p>
             <p> Lbs In: %s </p>
             <p> Lbs Out: %s </p>
-            <br>
-            <p><a href="./"> Return to the main page </a></p>
+            <p><a href="/"> Return to the main page </a></p>
         ''' % (employee, date, labor, origin, lbsIn, lbsOut) + self.footer()
     submitDestone.exposed = True
     
@@ -125,19 +133,10 @@ class Mill(Page):
         ''' + self.footer()
     index.exposed = True
 
-class Refine(Page):
-    title = 'Refining Data'
-    
-    def index(self):
-        return self.header() + '''
-            <p> refining fields here </p>
-        ''' + self.footer()
-    index.exposed = True
-
 root = StartPage()
 
 import os.path
-pageconfig = os.path.join(os.path.dirname(__file__), 'ts.conf')
+pageconfig = os.path.join(os.path.dirname(__file__), 'DataEntry.conf')
 
 if __name__ == '__main__':
     cherrypy.quickstart(root, config=pageconfig)
