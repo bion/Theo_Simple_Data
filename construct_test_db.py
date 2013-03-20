@@ -3,23 +3,11 @@ import sqlite3
 conn = sqlite3.connect('test.db')
 c = conn.cursor()
 
-c.execute( ''' CREATE TABLE Destone(
+c.execute( ''' CREATE TABLE Production( process VARCHAR(10),
     date VARCHAR(50), origin VARCHAR(10),
     operator VARCHAR(20), labor TINYINT(3),
-    lbsIn SMALLINT(5), lbsOut SMALLINT(5) ); ''')
-
-c.execute( ''' CREATE TABLE Roast(
-    origin VARCHAR(20), date VARCHAR(50),
-    operator VARCHAR(20), labor TINYINT(3), lbsIn SMALLINT(5) ); ''')
-
-c.execute( ''' CREATE TABLE Winnow(
-    origin VARCHAR(20), date VARCHAR(50), operator VARCHAR(20),
-    lbsOut SMALLINT(5) ); ''')
-
-c.execute( ''' CREATE TABLE Mill(
-    origin VARCHAR(20), date VARCHAR(50), operator VARCHAR(2),
-    lbsIn SMALLINT(5), lbsOut SMALLINT(5), tankNum TINYINT(1) ); ''')
-    
+    lbsIn SMALLINT(5), lbsOut SMALLINT(5), batch TINYINT(4) ); ''')
+ 
 c.execute( ''' CREATE TABLE Employee(
     ID INTEGER PRIMARY KEY, name VARCHAR(20), active INTEGER ); ''' )
 
