@@ -35,8 +35,6 @@ class Page:
     # but tuples constructed and sent to the DB are all of the same format
     # milling does not get assigned a batch
     def primaryForm(self, action):
-      # assign throughput info based on process step
-      validationScript = ''
       if action == "submitRoast":
         lbsInfo = '''
           Total pounds in:
@@ -55,16 +53,6 @@ class Page:
           Total pounds out:
           <input type="number" name="lbsOut" min="0" value="0" id="out" />
           <br> '''
-        validationScript = '''
-          <script type="text/javascript">
-          function validateYields(){
-            var lbsIn = document.getElementById('in')
-            var lbsOut = document.getElementById('out')
-            if(lbsIn <= lbsOut)
-              {
-              alert("lbs in cannot be more than lbs out")
-              }
-        '''
       
       # milling isn't associated with a batch
       if action == "submitMill":
@@ -96,7 +84,7 @@ class Page:
           <input type="text" name="comment" value="no comment" required />
           <input type="submit" />
           </form>
-        ''') % ( action, self.datetoday() ) + validationScript + self.footer()
+        ''') % ( action, self.datetoday() ) + self.footer()
     
     # adds form info to the database file
     def databaseSubmission(self, tuple):
