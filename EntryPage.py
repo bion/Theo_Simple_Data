@@ -1,6 +1,7 @@
 import cherrypy
 import datetime
 import sqlite3
+import os.path
 
 class Page:
     title = 'tbd page'
@@ -20,12 +21,29 @@ class Page:
         ''' % (self.title, self.title)
         
     def primaryForm(self, action):
-      conn = sqlite3.connect('test.db')
-      cursor = conn.cursor()
-      cursor.execute('SELECT max(batch) FROM Production')
-      currentBatch = cursor.fetchone()
-      conn.close()
-      return '''
+      
+      # assign throughput info based on process step
+      if action == "submitRoast":
+        lbsInfo = '''
+          Total pounds in:
+          <input type="number" name="lbsIn" min="0" value="0" />
+          <br> '''
+      elif action == "submitWinnow":
+        lbsInfo = '''
+          Total pounds out:
+          <input type="number" name="lbsOut" min="0" value="0" />
+          <br> '''
+      else:
+        lbsInfo = '''
+          Total pounds in:
+          <input type="number" name="lbsIn" min="0" value="0" />
+          <br>
+          Total pounds out:
+          <input type="number" name="lbsOut" min="0" value="0" />
+          <br> '''     
+      
+      # construct and return the form
+      return ('''
         <form action="%s" method="GET">
           Employee name: 
           <input type="text" name="employee" required />
@@ -38,26 +56,24 @@ class Page:
           <br>
           Origin: 
           <input type="text" name="origin" required />
-          <br>
-          Total pounds in:
-          <input type="number" name="lbsIn" min="0" value="0" />
-          <br>
-          Total pounds out:
-          <input type="number" name="lbsOut" min="0" value="0" />
-          <br>
+          <br> ''' + \
+          lbsInfo + \ # add relevant throughput info
+          '''
           Batch number:
-          <input type="number" name="batch" value="%s" required />
+          <input type="number" name="batch" required />
           <br> 
+          comment:
+          <input type="text" name="comment" value="no comment" required />
           <input type="submit" />
           </form>
-        ''' % ( action, self.datetoday(), currentBatch[0] )
+        ''') % ( action, self.datetoday() )
     
     def databaseSubmission(self, tuple):
         conn = sqlite3.connect('test.db')
         cursor = conn.cursor()
         cursor.execute('''
             INSERT INTO Production VALUES
-            (?, ?, ?, ?, ?, ?, ?, ?)
+            (?, ?, ?, ?, ?, ?, ?, ?, ?)
                 ''', tuple)
         conn.commit()
         conn.close()
@@ -72,6 +88,7 @@ class Page:
         <p> Lbs In: %s </p>
         <p> Lbs Out: %s </p>
         <p> Batch number: %s </p>
+        <p> %s </p>
         <p><a href="/"> Return to the main page </a></p> 
       ''' % tuple
     
@@ -101,7 +118,6 @@ class StartPage(Page):
                 <li><a href="./mill/">Mill</a></li>
             </ul>
             <p><a href="./report/">Or generate a production report</a></p>
-
         ''' + self.footer()
     index.exposed = True
     
@@ -113,9 +129,9 @@ class Destone(Page):
     index.exposed = True
     
     def submitDestone(self, employee = None, date = None, labor = None, origin = None,
-                     lbsIn = None, lbsOut = None, batch=None):
+                     lbsIn = None, lbsOut = None, batch=None, comment=None):
         
-        infoTuple = ('Destone', date, origin, employee, labor, lbsIn, lbsOut, batch)
+        infoTuple = ('Destone', date, origin, employee, labor, lbsIn, lbsOut, batch, comment)
         # add info to database
         self.databaseSubmission( infoTuple )
 
@@ -131,9 +147,9 @@ class Roast(Page):
     index.exposed = True
     
     def submitRoast(self, employee = None, date = None, labor = None, origin = None,
-                     lbsIn = None, lbsOut = None, batch=None):
+                     lbsIn = None, lbsOut = None, batch=None, comment=None):
         
-        infoTuple = ('Roast', date, origin, employee, labor, lbsIn, lbsOut, batch)
+        infoTuple = ('Roast', date, origin, employee, labor, lbsIn, lbsOut, batch, comment)
         # add info to database
         self.databaseSubmission( infoTuple )
 
@@ -149,9 +165,9 @@ class Winnow(Page):
     index.exposed = True
     
     def submitWinnow(self, employee = None, date = None, labor = None, origin = None,
-                     lbsIn = None, lbsOut = None, batch=None):
+                     lbsIn = None, lbsOut = None, batch=None, comment=None):
         
-        infoTuple = ('Winnow', date, origin, employee, labor, lbsIn, lbsOut, batch)
+        infoTuple = ('Winnow', date, origin, employee, labor, lbsIn, lbsOut, batch, comment)
         # add info to database
         self.databaseSubmission( infoTuple )
 
@@ -167,9 +183,9 @@ class Mill(Page):
     index.exposed = True
     
     def submitMill(self, employee = None, date = None, labor = None, origin = None,
-                     lbsIn = None, lbsOut = None, batch=None):
+                     lbsIn = None, lbsOut = None, batch=None, comment=None):
         
-        infoTuple = ('Mill', date, origin, employee, labor, lbsIn, lbsOut, batch)
+        infoTuple = ('Mill', date, origin, employee, labor, lbsIn, lbsOut, batch, comment)
         # add info to database
         self.databaseSubmission( infoTuple )
 
@@ -188,6 +204,7 @@ class Report(Page):
           <input type="number" name="batch" />
           <input type="submit" />
         </form>
+        <p> or </p>
         <form action="displayDateReport" method="GET">
           Date:
           <input type="text" name="date" value="%s" />
@@ -206,8 +223,8 @@ class Report(Page):
       
       items = cursor.fetchall()
       for item in items:
-        line = '<p>%s: %s IN/OUT: %s / %s LABOR: %s %s    %s</p>' \
-          % (item[0], item[2], item[5], item[6], item[4], item[3], item[1])
+        line = '<p>%s: %s IN/OUT: %s / %s LABOR: %s %s    %s   %s</p>' \
+          % (item[0], item[2], item[5], item[6], item[4], item[3], item[1], item[8])
         displayString = displayString + line
       conn.close()
       return self.header() + '''
@@ -225,20 +242,20 @@ class Report(Page):
       
       items = cursor.fetchall()
       for item in items:
-        line = '<p>%s: %s IN/OUT: %s / %s LABOR: %s %s    %s</p>' \
-          % (item[0], item[2], item[5], item[6], item[4], item[3], item[1])
+        line = '<p>%s: %s BATCH: %s IN/OUT: %s / %s LABOR: %s %s    %s   %s</p>' \
+          % (item[0], item[2], item[7], item[5], item[6], item[4], item[3], item[1], item[8])
         displayString = displayString + line
       conn.close()
       return self.header() + '''
         <p>Here's everything done on %s:</p>
         ''' % date + displayString + self.footer()
     displayDateReport.exposed = True
-    
-    
-root = StartPage()
 
-import os.path
 pageconfig = os.path.join(os.path.dirname(__file__), 'DataEntry.conf')
 
+# set root page for cherrypy
+root = StartPage()
+
+# launch cherrpy with 'root' and 'pageconfig' 
 if __name__ == '__main__':
     cherrypy.quickstart(root, config=pageconfig)
