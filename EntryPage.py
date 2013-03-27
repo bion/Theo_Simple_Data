@@ -267,10 +267,24 @@ class Report(Page):
       displayString = ''
       
       items = cursor.fetchall()
+      
+      itemIndex = 0
+      self.setItemList([])
       for item in items:
-        line = '<p>%s: %s IN/OUT: %s / %s LABOR: %s %s    %s   %s</p>' \
-          % (item[0], item[2], item[5], item[6], item[4], item[3], item[1], item[8])
+        self.addToItemList(item)
+        line = '''
+          <form action="editComment" method="GET">
+          %s: %s IN/OUT: %s / %s LABOR: %s %s    %s   %s
+          <input type="text" name="comment" required />
+          <input type="hidden" name="itemIndex" value="%s" />
+          <input type="hidden" name="reportType" value="%s" />
+          <input type="hidden" name="reportParam" value="%s" />
+          <input type="submit" name="edit comment" /> </form>
+          ''' % (item[0], item[2], item[5], item[6],
+                item[4], item[3], item[1], item[8],
+                itemIndex, "batch", batch)
         displayString = displayString + line
+        itemIndex += 1
       conn.close()
       return self.header() + '''
         <p>Here lies batch number %s:</p>
@@ -311,9 +325,6 @@ class Report(Page):
     displayDateReport.exposed = True
     
     def editComment(self, comment, itemIndex, reportType, reportParam):
-      print "debug!"*20
-      print self.getItemList()
-      print "debug!"*20
       conn = sqlite3.connect(DATABASE_FILENAME)
       cursor = conn.cursor()
       cursor.execute('''
