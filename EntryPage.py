@@ -7,8 +7,7 @@ DATABASE_FILENAME = 'production.db'
 
 # sitewide template page
 class Page:
-    title = 'tbd page'
-    action = 'tbd action'
+    title = 'tbd title'
     
     def datetoday(self):
       return str(datetime.datetime.now()).split()[0]
