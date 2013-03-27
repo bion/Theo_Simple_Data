@@ -76,7 +76,7 @@ class Page:
           <br> '''
       
       # construct and return the form
-      return ('''
+      return (self.header() + '''
         <form name="submitData" action="%s" method="GET">
           Employee name: 
           <input type="text" name="employee" required />
@@ -96,7 +96,7 @@ class Page:
           <input type="text" name="comment" value="no comment" required />
           <input type="submit" />
           </form>
-        ''') % ( action, self.datetoday() ) + validationScript
+        ''') % ( action, self.datetoday() ) + validationScript + self.footer()
     
     # adds form info to the database file
     def databaseSubmission(self, tuple):
@@ -154,7 +154,7 @@ class Destone(Page):
     title = 'Destoning Data'
 
     def index(self):
-        return self.header() + self.primaryForm('submitDestone') + self.footer()
+        return self.primaryForm('submitDestone')
     index.exposed = True
     
     def submitDestone(self, employee = None, date = None, labor = None, origin = None,
@@ -173,7 +173,7 @@ class Roast(Page):
     title = 'Roasting Data'
     
     def index(self):
-        return self.header() + self.primaryForm('submitRoast') + self.footer()
+        return self.primaryForm('submitRoast')
     index.exposed = True
     
     def submitRoast(self, employee = None, date = None, labor = None, origin = None,
@@ -192,7 +192,7 @@ class Winnow(Page):
     title = 'Winnowing Data'
     
     def index(self):
-        return self.header() + self.primaryForm('submitWinnow') + self.footer()
+        return self.primaryForm('submitWinnow')
     index.exposed = True
     
     def submitWinnow(self, employee = None, date = None, labor = None, origin = None,
@@ -211,7 +211,7 @@ class Mill(Page):
     title = 'Milling Data'
     
     def index(self):
-        return self.header() + self.primaryForm('submitMill') + self.footer()
+        return self.primaryForm('submitMill')
     index.exposed = True
     
     def submitMill(self, employee = None, date = None, labor = None, origin = None,
