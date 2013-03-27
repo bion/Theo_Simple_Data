@@ -5,6 +5,7 @@ import os.path
 
 DATABASE_FILENAME = 'test.db'
 
+# sitewide template page
 class Page:
     title = 'tbd page'
     action = 'tbd action'
@@ -12,6 +13,7 @@ class Page:
     def datetoday(self):
       return str(datetime.datetime.now()).split()[0]
     
+    # html header, for convenience
     def header(self):
         return '''
             <html>
@@ -21,7 +23,17 @@ class Page:
             <body>
             <h2>%s</h2>
         ''' % (self.title, self.title)
-        
+    
+    # html footer, for convenience
+    def footer(self):
+        return '''
+            </body>
+            </html>
+        '''
+    
+    # data entry form, presents differently based on process step
+    # but tuples constructed and sent to the DB are all of the same format
+    # milling does not get assigned a batch
     def primaryForm(self, action):
       
       # assign throughput info based on process step
@@ -44,6 +56,15 @@ class Page:
           <input type="number" name="lbsOut" min="0" value="0" />
           <br> '''     
       
+      # milling isn't associated with a batch
+      if action == "submitMill":
+        batchString = ''
+      else:
+        batchString = '''
+          Batch number:
+          <input type="number" name="batch" required />
+          <br> '''
+      
       # construct and return the form
       return ('''
         <form action="%s" method="GET">
@@ -59,17 +80,15 @@ class Page:
           Origin: 
           <input type="text" name="origin" required />
           <br> ''' + \
-          lbsInfo + \ # add relevant throughput info
-          '''
-          Batch number:
-          <input type="number" name="batch" required />
-          <br> 
+          # add relevant throughput and batch fields
+          lbsInfo + batchString + '''
           comment:
           <input type="text" name="comment" value="no comment" required />
           <input type="submit" />
           </form>
         ''') % ( action, self.datetoday() )
     
+    # adds form info to the database file
     def databaseSubmission(self, tuple):
         conn = sqlite3.connect(DATABASE_FILENAME)
         cursor = conn.cursor()
@@ -79,7 +98,8 @@ class Page:
                 ''', tuple)
         conn.commit()
         conn.close()
-        
+    
+    # displays for the user their input after form submission
     def displayInput(self, tuple):
       return '''
         <p> The following was submitted for %s: </p>
@@ -93,16 +113,12 @@ class Page:
         <p> %s </p>
         <p><a href="/"> Return to the main page </a></p> 
       ''' % tuple
-    
-    def footer(self):
-        return '''
-            </body>
-            </html>
-        '''
 
+# homepage with links to data submitting and report generating pages
 class StartPage(Page):
     title = 'Theo Production Tracking'
     
+    # initialize mapping StartPage methods to their respective page classes
     def __init__(self):
         self.destone = Destone()
         self.roast = Roast()
@@ -122,7 +138,8 @@ class StartPage(Page):
             <p><a href="./report/">Or generate a production report</a></p>
         ''' + self.footer()
     index.exposed = True
-    
+
+# data submission for destoning
 class Destone(Page):
     title = 'Destoning Data'
 
@@ -141,6 +158,7 @@ class Destone(Page):
         return self.header() + self.displayInput( infoTuple ) + self.footer()
     submitDestone.exposed = True
     
+# data submission for roasting
 class Roast(Page):
     title = 'Roasting Data'
     
@@ -149,7 +167,7 @@ class Roast(Page):
     index.exposed = True
     
     def submitRoast(self, employee = None, date = None, labor = None, origin = None,
-                     lbsIn = None, lbsOut = None, batch=None, comment=None):
+                     lbsIn = None, lbsOut = "N/A", batch=None, comment=None):
         
         infoTuple = ('Roast', date, origin, employee, labor, lbsIn, lbsOut, batch, comment)
         # add info to database
@@ -159,6 +177,7 @@ class Roast(Page):
         return self.header() + self.displayInput( infoTuple ) + self.footer()
     submitRoast.exposed = True
 
+# data submission for winnowing
 class Winnow(Page):
     title = 'Winnowing Data'
     
@@ -167,7 +186,7 @@ class Winnow(Page):
     index.exposed = True
     
     def submitWinnow(self, employee = None, date = None, labor = None, origin = None,
-                     lbsIn = None, lbsOut = None, batch=None, comment=None):
+                     lbsIn = "N/A", lbsOut = None, batch=None, comment=None):
         
         infoTuple = ('Winnow', date, origin, employee, labor, lbsIn, lbsOut, batch, comment)
         # add info to database
@@ -177,6 +196,7 @@ class Winnow(Page):
         return self.header() + self.displayInput( infoTuple ) + self.footer()
     submitWinnow.exposed = True
 
+# data submission for milling
 class Mill(Page):
     title = 'Milling Data'
     
@@ -185,7 +205,7 @@ class Mill(Page):
     index.exposed = True
     
     def submitMill(self, employee = None, date = None, labor = None, origin = None,
-                     lbsIn = None, lbsOut = None, batch=None, comment=None):
+                     lbsIn = None, lbsOut = None, batch="N/A", comment=None):
         
         infoTuple = ('Mill', date, origin, employee, labor, lbsIn, lbsOut, batch, comment)
         # add info to database
@@ -194,7 +214,8 @@ class Mill(Page):
         # display info for user
         return self.header() + self.displayInput( infoTuple ) + self.footer()
     submitMill.exposed = True
-    
+  
+# report generating page, can be generated by date or batch number
 class Report(Page):
     title = 'Production report generator'
     
