@@ -3,6 +3,8 @@ import datetime
 import sqlite3
 import os.path
 
+DATABASE_FILENAME = 'test.db'
+
 class Page:
     title = 'tbd page'
     action = 'tbd action'
@@ -69,7 +71,7 @@ class Page:
         ''') % ( action, self.datetoday() )
     
     def databaseSubmission(self, tuple):
-        conn = sqlite3.connect('test.db')
+        conn = sqlite3.connect(DATABASE_FILENAME)
         cursor = conn.cursor()
         cursor.execute('''
             INSERT INTO Production VALUES
@@ -214,7 +216,7 @@ class Report(Page):
     index.exposed = True
     
     def displayBatchReport(self, batch = None):
-      conn = sqlite3.connect('test.db')
+      conn = sqlite3.connect(DATABASE_FILENAME)
       cursor = conn.cursor()
       cursor.execute('''
         SELECT * FROM Production WHERE batch=?
@@ -233,7 +235,7 @@ class Report(Page):
     displayBatchReport.exposed = True
     
     def displayDateReport(self, date = None):
-      conn = sqlite3.connect('test.db')
+      conn = sqlite3.connect(DATABASE_FILENAME)
       cursor = conn.cursor()
       cursor.execute('''
         SELECT * FROM Production WHERE date=?
