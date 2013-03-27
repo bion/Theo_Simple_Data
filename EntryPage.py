@@ -232,6 +232,15 @@ class Report(Page):
     title = 'Production report generator'
     itemList = []
     
+    def getItemList(self):
+      return self.itemList
+      
+    def setItemList(self, set):
+      self.itemList = set
+      
+    def addToItemList(self, item):
+      self.itemList = self.itemList+[item]
+    
     def index(self):
       return self.header() + '''
         <p>Generate a report by:</p>
@@ -279,9 +288,9 @@ class Report(Page):
       items = cursor.fetchall()
       
       itemIndex = 0
+      self.setItemList([])
       for item in items:
-        itemList = itemList + [item]
-      
+        self.addToItemList(item)
         line = '''
           <form action="editComment" method="GET">
           %s: %s BATCH: %s IN/OUT: %s / %s LABOR: %s %s    %s   %s
@@ -289,7 +298,7 @@ class Report(Page):
           <input type="hidden" name="itemIndex" value="%s" />
           <input type="hidden" name="reportType" value="%s" />
           <input type="hidden" name="reportParam" value="%s" />
-          <input type="submit" /> </form>
+          <input type="submit" value="edit comment" /> </form>
           ''' % (item[0], item[2], item[7], item[5], 
                 item[6], item[4], item[3], item[1], item[8],
                 itemIndex, "date", date)
@@ -302,6 +311,9 @@ class Report(Page):
     displayDateReport.exposed = True
     
     def editComment(self, comment, itemIndex, reportType, reportParam):
+      print "debug!"*20
+      print self.getItemList()
+      print "debug!"*20
       conn = sqlite3.connect(DATABASE_FILENAME)
       cursor = conn.cursor()
       cursor.execute('''
@@ -315,15 +327,15 @@ class Report(Page):
         AND lbsIn=?
         AND lbsOut=?
         AND batch=?
-      ''', [comment] + itemList[itemIndex][:8] )
-      
+      ''', [comment] + list(self.getItemList()[int(itemIndex)][:8]) )
       conn.commit()
-      itemList = []
+      conn.close()
       
       if reportType == "date":
         returnPage = self.displayDateReport(reportParam)
       else:
         returnPage = self.displayBatchReport(reportParam)
+
       return returnPage
     editComment.exposed = True
 
