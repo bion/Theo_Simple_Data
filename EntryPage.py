@@ -122,7 +122,7 @@ class Page:
         <p> Batch number: %s </p>
         <p> %s </p>
         <p><a href="/"> Return to the main page </a></p> 
-      ''' % tuple + self.footer
+      ''' % tuple + self.footer()
 
 # homepage with links to data submitting and report generating pages
 class StartPage(Page):
@@ -279,7 +279,7 @@ class Report(Page):
           <input type="hidden" name="itemIndex" value="%s" />
           <input type="hidden" name="reportType" value="%s" />
           <input type="hidden" name="reportParam" value="%s" />
-          <input type="submit" name="edit comment" /> </form>
+          <input type="submit" value="edit comment" /> </form>
           ''' % (item[0], item[2], item[5], item[6],
                 item[4], item[3], item[1], item[8],
                 itemIndex, "batch", batch)
@@ -288,7 +288,8 @@ class Report(Page):
       conn.close()
       return self.header() + '''
         <p>Here lies batch number %s:</p>
-        ''' % batch + displayString + self.footer()
+        ''' % batch + displayString \
+            + '<p><a href="/"> Return to the main page </a></p>' + self.footer()
     displayBatchReport.exposed = True
     
     def displayDateReport(self, date = None):
@@ -321,7 +322,8 @@ class Report(Page):
       conn.close()
       return self.header() + '''
         <p>Here's everything done on %s:</p>
-        ''' % date + displayString + self.footer()
+        ''' % date + displayString \
+            + '<p><a href="/"> Return to the main page </a></p>' + self.footer()
     displayDateReport.exposed = True
     
     def editComment(self, comment, itemIndex, reportType, reportParam):
