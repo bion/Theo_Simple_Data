@@ -18,6 +18,19 @@ class Page:
             <html>
             <head>
                 <title>%s</title>
+                <style>
+                  body {
+                  text-align: center;
+                  font-family: optima;
+                  text-decoration: none;
+                  } 
+                  a:link { color: black }
+                  a:visited { color: black }
+                  a:hover { color: gray }
+                  a:active { color: gray }
+                  h2 { font-size: xx-large }
+                  p { font-size: x-large }
+                </style>
             <head>
             <body>
             <h2>%s</h2>
@@ -81,6 +94,7 @@ class Page:
           lbsInfo + batchString + '''
           Comment:
           <input type="text" name="comment" value="no comment" required />
+          <br>
           <input type="submit" />
           </form>
         ''') % ( action, self.datetoday() ) + self.footer()
@@ -125,14 +139,14 @@ class StartPage(Page):
     
     def index(self):
         return self.header() + '''
-            <p> Select a production step to input data: </p>
-            <ul>
-                <li><a href="./destone/">Destone</a></li>
-                <li><a href="./roast/">Roast</a></li>
-                <li><a href="./winnow/">Winnow</a></li>
-                <li><a href="./mill/">Mill</a></li>
-            </ul>
-            <p><a href="./report/">Or generate a production report</a></p>
+            <p> select a production step to input data </p>
+            <br>
+            <p><a href="./destone/">Destone</a></p>
+            <p><a href="./roast/">Roast</a></p>
+            <p><a href="./winnow/">Winnow</a></p>
+            <p><a href="./mill/">Mill</a></p>
+            <br>
+            <p><a href="./report/">or generate a production report</a></p>
         ''' + self.footer()
     index.exposed = True
 
